@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+<meta name="theme-color" content="#6e48aa"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>ChatNova AI</title>
+<style>
+:root{
+--primary:#6e48aa;
+--bubble-user:#7c3aed;
+--bubble-bot:#4f46e5;
+}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+-webkit-tap-highlight-color: transparent;
+}
+body{
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+background:linear-gradient(135deg,#667eea,#764ba2);
+color:white;
+height:100vh;
+height:100dvh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+header{
+background:rgba(0,0,0,0.4);
+padding:8px 16px;
+text-align:center;
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+border-bottom:1px solid rgba(255,255,255,0.1);
+flex-shrink:0;
+position:relative;
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+.header-left{
+display:flex;
+align-items:center;
+gap:15px;
+}
+.header-right{
+display:flex;
+align-items:center;
+gap:15px;
+}
+h1{
+font-size:clamp(1.2rem, 5vw, 1.6rem);
+font-weight:600;
+letter-spacing:0.5px;
+}
+.chat-container{
+flex:1;
+overflow-y:auto;
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:12px;
+-webkit-overflow-scrolling: touch;
+scroll-behavior:smooth;
+}
+.message{
+max-width:85%;
+padding:12px 16px;
+border-radius:20px;
+line-height:1.6;
+font-size:clamp(0.9rem, 4vw, 1rem);
+word-wrap:break-word;
+white-space:pre-wrap;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+animation:fadeIn 0.3s ease;
+}
+.user{
+align-self:flex-end;
+background:var(--bubble-user);
+border-bottom-right-radius:4px;
+}
+.bot{
+align-self:flex-start;
+background:var(--bubble-bot);
+border-bottom-left-radius:4px;
+}
+.typing{
+opacity:0.7;
+font-style:italic;
+background:rgba(79,70,229,0.5);
+}
+.input-area{
+padding:8px 16px 16px 16px;
+background:rgba(0,0,0,0.4);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+border-top:1px solid rgba(255,255,255,0.1);
+flex-shrink:0;
+}
+.input-wrapper{
+display:flex;
+gap:10px;
+margin-bottom:6px;
+}
+#messageInput{
+flex:1;
+padding:14px 18px;
+border:none;
+border-radius:30px;
+font-size:clamp(0.9rem, 4vw, 1rem);
+outline:none;
+background:rgba(255,255,255,0.95);
+color:#333;
+}
+#messageInput::placeholder{
+color:#999;
+font-size:clamp(0.8rem, 3.5vw, 0.95rem);
+}
+.send-btn{
+padding:14px 28px;
+border:none;
+background:var(--primary);
+color:white;
+border-radius:30px;
+cursor:pointer;
+font-weight:600;
+font-size:clamp(0.9rem, 4vw, 1rem);
+transition:all 0.2s ease;
+min-width:80px;
+touch-action:manipulation;
+}
+.send-btn:hover{
+background:#5b21b6;
+}
+.send-btn:active{
+transform:scale(0.97);
+}
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(10px);}
+to{opacity:1; transform:translateY(0);}
+}
+.watermark{
+text-align:center;
+color:rgba(255,255,255,0.5);
+font-size:0.7rem;
+letter-spacing:1px;
+font-weight:300;
+border-top:1px solid rgba(255,255,255,0.1);
+padding-top:6px;
+margin-top:2px;
+}
+.watermark span{
+color:#ffd700;
+font-weight:600;
+margin:0 4px;
+}
+
+/* ===== BOTONES GRANDES Y FÁCILES DE PRESIONAR ===== */
+.menu-btn{
+background:transparent;
+border:none;
+color:white;
+font-size:28px;
+cursor:pointer;
+width:48px;
+height:48px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:50%;
+transition:background 0.2s;
+touch-action:manipulation;
+}
+.menu-btn:hover{
+background:rgba(255,255,255,0.1);
+}
+.menu-btn:active{
+background:rgba(255,255,255,0.2);
+transform:scale(0.95);
+}
+
+/* ===== BOTÓN NUEVO CHAT MÁS GRANDE ===== */
+.new-chat-btn{
+background:#ffd700;
+color:#764ba2;
+border:none;
+padding:8px 16px;
+border-radius:30px;
+font-size:clamp(0.85rem, 4vw, 1rem);
+font-weight:bold;
+cursor:pointer;
+white-space:nowrap;
+display:flex;
+align-items:center;
+gap:6px;
+transition:all 0.2s;
+box-shadow:0 2px 8px rgba(0,0,0,0.2);
+touch-action:manipulation;
+min-height:44px; /* Altura mínima para fácil presión */
+}
+.new-chat-btn:hover{
+background:#ffed4e;
+}
+.new-chat-btn:active{
+transform:scale(0.95);
+background:#ffd700;
+}
+.new-chat-btn span{
+font-size:1.2rem;
+}
+
+/* ===== CONTADOR DE PREGUNTAS ===== */
+.question-counter{
+background:rgba(255,215,0,0.2);
+color:#ffd700;
+padding:5px 14px;
+border-radius:25px;
+font-size:1rem;
+font-weight:600;
+border:1px solid rgba(255,215,0,0.3);
+white-space:nowrap;
+min-height:44px;
+display:flex;
+align-items:center;
+}
+.question-counter.warning{
+background:#ff6b6b;
+color:white;
+border-color:#ff6b6b;
+}
+.question-counter span{
+margin-right:5px;
+font-size:1.1rem;
+}
+
+.sidebar{
+position:fixed;
+top:0;
+left:-300px;
+width:280px;
+height:100%;
+background:rgba(0,0,0,0.95);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+transition:left 0.3s ease;
+z-index:1000;
+border-right:1px solid rgba(255,255,255,0.1);
+display:flex;
+flex-direction:column;
+}
+.sidebar.open{
+left:0;
+}
+.sidebar-header{
+padding:20px;
+border-bottom:1px solid rgba(255,255,255,0.1);
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+.sidebar-header h3{
+font-size:1.2rem;
+color:#ffd700;
+}
+.close-btn{
+background:transparent;
+border:none;
+color:white;
+font-size:28px;
+cursor:pointer;
+width:48px;
+height:48px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:50%;
+}
+.close-btn:active{
+background:rgba(255,255,255,0.1);
+transform:scale(0.95);
+}
+.conversaciones-list{
+flex:1;
+overflow-y:auto;
+padding:15px;
+-webkit-overflow-scrolling: touch;
+}
+.conversacion-item{
+padding:15px;
+margin-bottom:10px;
+background:rgba(255,255,255,0.1);
+border-radius:12px;
+cursor:pointer;
+transition:all 0.2s;
+position:relative;
+border-left:3px solid transparent;
+min-height:70px;
+}
+.conversacion-item:hover{
+background:rgba(255,255,255,0.2);
+}
+.conversacion-item:active{
+background:rgba(255,255,255,0.3);
+transform:scale(0.98);
+}
+.conversacion-item.selected{
+border-left-color:#ffd700;
+background:rgba(255,215,0,0.1);
+}
+.conversacion-item .pregunta{
+color:#ffd700;
+font-weight:500;
+margin-bottom:6px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+font-size:1rem;
+padding-right:35px;
+}
+.conversacion-item .fecha{
+font-size:0.75rem;
+color:#aaa;
+}
+.delete-chat-btn{
+position:absolute;
+right:12px;
+top:50%;
+transform:translateY(-50%);
+background:#ff6b6b;
+color:white;
+border:none;
+width:32px;
+height:32px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:1.3rem;
+cursor:pointer;
+opacity:0;
+transition:opacity 0.2s;
+pointer-events:none;
+}
+.conversacion-item:hover .delete-chat-btn{
+opacity:1;
+pointer-events:auto;
+}
+.delete-chat-btn:active{
+transform:translateY(-50%) scale(0.9);
+background:#ff5252;
+}
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+backdrop-filter:blur(3px);
+-webkit-backdrop-filter:blur(3px);
+z-index:999;
+display:none;
+}
+.overlay.show{
+display:block;
+}
+.modal, .modal-delete{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.8);
+backdrop-filter:blur(5px);
+-webkit-backdrop-filter:blur(5px);
+z-index:2000;
+display:flex;
+align-items:center;
+justify-content:center;
+display:none;
+padding:20px;
+}
+.modal.show, .modal-delete.show{
+display:flex;
+}
+.modal-content{
+background:linear-gradient(135deg,#667eea,#764ba2);
+padding:clamp(25px, 5vw, 35px);
+border-radius:25px;
+max-width:380px;
+width:100%;
+text-align:center;
+box-shadow:0 10px 40px rgba(0,0,0,0.3);
+}
+.modal-content h3{
+color:#ffd700;
+margin-bottom:15px;
+font-size:clamp(1.3rem, 5vw, 1.6rem);
+}
+.modal-content p{
+margin-bottom:25px;
+line-height:1.6;
+font-size:1.1rem;
+}
+.modal-buttons{
+display:flex;
+gap:15px;
+justify-content:center;
+}
+.modal-buttons button{
+padding:15px 25px;
+min-width:130px;
+font-size:1.1rem;
+border-radius:40px;
+}
+.modal-buttons .confirm{
+background:#ff6b6b;
+}
+.modal-buttons .confirm:active{
+transform:scale(0.95);
+background:#ff5252;
+}
+.modal-buttons .cancel{
+background:#666;
+}
+.modal-buttons .cancel:active{
+transform:scale(0.95);
+background:#777;
+}
+.modal-delete .modal-content{
+background:linear-gradient(135deg,#ff6b6b,#c44b93);
+}
+.modal-delete .modal-content h3{
+color:white;
+}
+.modal-delete .modal-buttons .confirm{
+background:#ffd700;
+color:#764ba2;
+}
+@media (max-width:600px){
+.sidebar{width:85%; left:-85%;}
+.new-chat-btn span:last-child{display:inline;}
+.delete-chat-btn{opacity:1; pointer-events:auto;}
+.header-left{gap:8px;}
+.header-right{gap:8px;}
+}
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3>📋 Historial</h3>
+        <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    </div>
+    <div class="conversaciones-list" id="conversacionesList"></div>
+</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="modal" id="confirmModal">
+    <div class="modal-content">
+        <h3>¿Nuevo Chat?</h3>
+        <p>La conversación actual se guardará en el historial.<br>¿Quieres continuar?</p>
+        <div class="modal-buttons">
+            <button class="confirm" onclick="confirmarNuevoChat()">Sí, nuevo</button>
+            <button class="cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-delete" id="deleteModal">
+    <div class="modal-content">
+        <h3>🗑️ Eliminar Chat</h3>
+        <p>¿Eliminar esta conversación del historial?</p>
+        <div class="modal-buttons">
+            <button class="confirm" onclick="confirmarEliminarChat()">Eliminar</button>
+            <button class="cancel" onclick="cerrarDeleteModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="header-left">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <h1>ChatNova AI</h1>
+    </div>
+    <div class="header-right">
+        <div class="question-counter" id="questionCounter">
+            <span>⭐</span> 500
+        </div>
+        <button class="new-chat-btn" onclick="mostrarModalNuevoChat()">
+            <span>➕</span> <span>Nuevo</span>
+        </button>
+    </div>
+</header>
+
+<div class="chat-container" id="chat"></div>
+
+<div class="input-area">
+    <div class="input-wrapper">
+        <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." autocomplete="off"/>
+        <button class="send-btn" onclick="sendMessage()">Enviar</button>
+    </div>
+    <div class="watermark">
+        <span>✦</span> ChatNova AI Versión 1.0 <span>✦</span>
+    </div>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+let memoria = [];
+let chatId = Date.now();
+let chatIniciado = false;
+let chatAEliminar = null;
+
+// ===== API KEY DE GEMINI =====
+const GEMINI_API_KEY = "AIzaSyAIbpGykCNPkRBmX8w4Nj4vRtPDzm0dBPU";
+
+// ===== CONTADOR DE PREGUNTAS =====
+const LIMITE_DIARIO = 500;
+let preguntasHoy = 0;
+const questionCounter = document.getElementById("questionCounter");
+
+function cargarContador() {
+    const hoy = new Date().toDateString();
+    const guardado = localStorage.getItem('gemini_contador');
+    
+    if (guardado) {
+        const datos = JSON.parse(guardado);
+        if (datos.fecha === hoy) {
+            preguntasHoy = datos.cantidad;
+        } else {
+            preguntasHoy = 0;
+            localStorage.setItem('gemini_contador', JSON.stringify({fecha: hoy, cantidad: 0}));
+        }
+    } else {
+        localStorage.setItem('gemini_contador', JSON.stringify({fecha: hoy, cantidad: 0}));
+    }
+    actualizarContador();
+}
+
+function actualizarContador() {
+    const restantes = LIMITE_DIARIO - preguntasHoy;
+    questionCounter.innerHTML = `<span>⭐</span> ${restantes}`;
+    
+    if (restantes < 50) {
+        questionCounter.classList.add('warning');
+    } else {
+        questionCounter.classList.remove('warning');
+    }
+}
+
+function incrementarContador() {
+    preguntasHoy++;
+    const hoy = new Date().toDateString();
+    localStorage.setItem('gemini_contador', JSON.stringify({fecha: hoy, cantidad: preguntasHoy}));
+    actualizarContador();
+}
+
+cargarContador();
+
+// ===== FUNCIONES DEL HISTORIAL =====
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+const conversacionesList = document.getElementById("conversacionesList");
+const confirmModal = document.getElementById("confirmModal");
+const deleteModal = document.getElementById("deleteModal");
+
+function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function mostrarModalNuevoChat() {
+    if (chatIniciado) {
+        confirmModal.classList.add('show');
+    } else {
+        iniciarNuevoChat();
+    }
+}
+
+function cerrarModal() {
+    confirmModal.classList.remove('show');
+}
+
+function cerrarDeleteModal() {
+    deleteModal.classList.remove('show');
+    chatAEliminar = null;
+}
+
+function guardarChatActual() {
+    if (memoria.length === 0) return;
+    
+    let conversaciones = JSON.parse(localStorage.getItem('conversaciones') || '[]');
+    const existe = conversaciones.findIndex(c => c.id === chatId);
+    
+    const conversacion = {
+        id: chatId,
+        fecha: new Date().toLocaleString(),
+        primerMensaje: memoria[0] || "Chat sin mensajes",
+        mensajes: [...memoria]
+    };
+    
+    if (existe >= 0) {
+        conversaciones[existe] = conversacion;
+    } else {
+        conversaciones.push(conversacion);
+    }
+    
+    if (conversaciones.length > 30) conversaciones.shift();
+    localStorage.setItem('conversaciones', JSON.stringify(conversaciones));
+    actualizarListaConversaciones();
+}
+
+function iniciarNuevoChat() {
+    guardarChatActual();
+    chat.innerHTML = '';
+    chatId = Date.now();
+    memoria = [];
+    chatIniciado = false;
+    
+    const restantes = LIMITE_DIARIO - preguntasHoy;
+    const bienvenida = `😊 ¡Hola! Soy ChatNova AI (Versión 1.0).
+
+⚠️ Puedo conversar contigo
+✅ Puedo darte código de programación
+✅ Puedo ayudarte con estudios
+
+⭐ Con Gemini API - ${restantes} preguntas restantes hoy
+
+¿Qué necesitas?`;
+    agregarMensaje(bienvenida, false);
+    cerrarModal();
+    if (sidebar.classList.contains('open')) toggleSidebar();
+}
+
+function confirmarNuevoChat() {
+    iniciarNuevoChat();
+}
+
+function actualizarListaConversaciones() {
+    let conversaciones = JSON.parse(localStorage.getItem('conversaciones') || '[]');
+    if (conversaciones.length === 0) {
+        conversacionesList.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px;">No hay conversaciones</div>';
+        return;
+    }
+    
+    conversaciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    conversacionesList.innerHTML = conversaciones.map(conv => `
+        <div class="conversacion-item" onclick="seleccionarConversacion('${conv.id}')" data-id="${conv.id}">
+            <div class="pregunta">💬 ${conv.primerMensaje.substring(0, 40)}${conv.primerMensaje.length > 40 ? '...' : ''}</div>
+            <div class="fecha">${conv.fecha}</div>
+            <button class="delete-chat-btn" onclick="event.stopPropagation(); mostrarMenuEliminar('${conv.id}')">✕</button>
+        </div>
+    `).join('');
+}
+
+function mostrarMenuEliminar(id) {
+    chatAEliminar = id;
+    deleteModal.classList.add('show');
+}
+
+function confirmarEliminarChat() {
+    if (!chatAEliminar) return;
+    
+    let conversaciones = JSON.parse(localStorage.getItem('conversaciones') || '[]');
+    conversaciones = conversaciones.filter(c => c.id != chatAEliminar);
+    localStorage.setItem('conversaciones', JSON.stringify(conversaciones));
+    
+    if (chatAEliminar == chatId) {
+        chat.innerHTML = '';
+        chatId = Date.now();
+        memoria = [];
+        chatIniciado = false;
+        const restantes = LIMITE_DIARIO - preguntasHoy;
+        const bienvenida = `😊 ¡Hola! Soy ChatNova AI (Versión 1.0).\n\n⚠️ Puedo conversar contigo\n✅ Puedo darte código de programación\n✅ Puedo ayudarte con estudios\n\n⭐ Con Gemini API - ${restantes} preguntas restantes hoy\n\n¿Qué necesitas?`;
+        agregarMensaje(bienvenida, false);
+    }
+    
+    actualizarListaConversaciones();
+    cerrarDeleteModal();
+}
+
+function seleccionarConversacion(id) {
+    let conversaciones = JSON.parse(localStorage.getItem('conversaciones') || '[]');
+    const conv = conversaciones.find(c => c.id == id);
+    
+    if (conv) {
+        guardarChatActual();
+        chat.innerHTML = '';
+        for (let i = 0; i < conv.mensajes.length; i += 2) {
+            if (conv.mensajes[i]) agregarMensaje(conv.mensajes[i], true);
+            if (conv.mensajes[i+1]) agregarMensaje(conv.mensajes[i+1], false);
+        }
+        memoria = conv.mensajes || [];
+        chatId = conv.id;
+        chatIniciado = memoria.length > 0;
+        toggleSidebar();
+    }
+}
+
+// ===== RESPUESTAS LOCALES =====
+const respuestasLocales = {
+    "hola": "¡Hola! ¿Cómo estás?",
+    "gracias": "¡De nada! 😊",
+    "adiós": "¡Adiós! Fue un gusto.",
+    "te quiero": "¡Yo también te quiero! ❤️"
+};
+
+const codigos = {
+    "python": "```python\nprint('Hola Mundo')\n```",
+    "javascript": "```javascript\nconsole.log('Hola Mundo');\n```",
+    "html": "```html\n<h1>Hola Mundo</h1>\n```"
+};
+
+// ===== FUNCIÓN PRINCIPAL =====
+async function responder(texto) {
+    const pregunta = texto.toLowerCase().trim();
+    
+    if (respuestasLocales[pregunta]) return respuestasLocales[pregunta];
+    for (let key in codigos) {
+        if (pregunta.includes(key)) return codigos[key];
+    }
+    
+    if (preguntasHoy >= LIMITE_DIARIO) {
+        return "❌ Límite diario alcanzado. Vuelve mañana.";
+    }
+    
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: texto }] }]
+            })
+        });
+        const data = await response.json();
+        if (data.candidates && data.candidates[0]) {
+            incrementarContador();
+            return data.candidates[0].content.parts[0].text;
+        }
+        return "No pude obtener respuesta.";
+    } catch (error) {
+        return "Error de conexión.";
+    }
+}
+
+function agregarMensaje(texto, usuario=false){
+    const div = document.createElement("div");
+    div.classList.add("message", usuario ? "user" : "bot");
+    div.innerHTML = texto.replace(/\n/g, '<br>');
+    chat.appendChild(div);
+    div.scrollIntoView({behavior: "smooth"});
+    return div;
+}
+
+function mostrarTyping(){
+    const div = document.createElement("div");
+    div.classList.add("message", "bot", "typing");
+    div.innerHTML = "Escribiendo...";
+    chat.appendChild(div);
+    return div;
+}
+
+async function sendMessage(){
+    const input = document.getElementById("messageInput");
+    const texto = input.value.trim();
+    if(!texto) return;
+    
+    memoria.push(texto);
+    agregarMensaje(texto, true);
+    input.value = "";
+    chatIniciado = true;
+    
+    const typing = mostrarTyping();
+    setTimeout(async () => {
+        typing.remove();
+        const respuesta = await responder(texto);
+        memoria.push(respuesta);
+        agregarMensaje(respuesta);
+        guardarChatActual();
+    }, 500);
+}
+
+document.getElementById("messageInput").addEventListener("keypress", e => {
+    if(e.key === "Enter") sendMessage();
+});
+
+const restantes = LIMITE_DIARIO - preguntasHoy;
+setTimeout(() => {
+    agregarMensaje(`😊 ¡Hola! Soy ChatNova AI (Versión 1.0).
+
+⚠️ Puedo conversar contigo
+✅ Puedo darte código de programación
+✅ Puedo ayudarte con estudios
+
+⭐ Con Gemini API - ${restantes} preguntas restantes hoy
+
+¿Qué necesitas?`, false);
+}, 500);
+
+actualizarListaConversaciones();
+</script>
+</body>
+</html>
